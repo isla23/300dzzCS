@@ -1,4 +1,4 @@
-[![Docs_Onlie](https://img.shields.io/badge/在线阅读-FFAA00?logo=readthedocs&logoColor=fff)](https://maagf1.github.io/docs/)
+[![Docs_Onlie](https://img.shields.io/badge/在线阅读-FFAA00?logo=readthedocs&logoColor=fff)](https://isla23.github.io/300dzzCS/)
 
 # MaaGF1 文档仓库
 
