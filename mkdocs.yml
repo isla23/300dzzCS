@@ -1,9 +1,10 @@
-site_name: MaaGF1 文档
-site_url: https://maagf1.github.io/docs/
-site_description: 少女前线PC端自动化项目文档
-repo_url: https://github.com/MaaGF1/MaaGF1
-repo_name: MaaGF1/MaaGF1
-edit_uri: https://github.com/MaaGF1/docs/edit/main/
+site_name: 300cs
+site_url: https://isla23.github.io/300dzzCS/
+site_description: 300cs
+repo_url: https://github.com/isla23/300dzzCS
+repo_name: 300dzzCS
+edit_uri: https://github.com/isla23/300dzzCS/edit/main/
+
 
 # 自定义CSS
 extra_css:
