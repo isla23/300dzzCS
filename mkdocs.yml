@@ -69,6 +69,8 @@ nav:
     - 循演战役: tutorial/rescue/循演战役.md
   - 进阶指南:
     - 虚拟显示器: advanced/虚拟显示器.md
+  - 300CS:
+    -300cs: 300cs/cs_1.0.md
 
 markdown_extensions:
   - admonition
