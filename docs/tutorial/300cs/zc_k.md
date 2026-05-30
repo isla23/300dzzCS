@@ -11,6 +11,10 @@ comments: true
 已永久拿下低分杂蛆cs第一位
 <hr style="border: 1px solid #9b44ff;">  
 
+## ID:1078169214 <span style="color:#ff4444">诗倦</span>
+>![](pic/012.png)<br>战法半藏，除了断线就是推人进泉水  
+<hr style="border: 1px solid #9b44ff;">
+
 ## ID:1345758127 <span style="color:#ff4444">酸败里的伊藤诚</span>
 >![](pic/005.png)![](pic/005_2.png)<br>"我要断三线！"<br>玩k就算了，还公开放话要折磨酸友，你🐎批发的？
 <hr style="border: 1px solid #9b44ff;"> 
