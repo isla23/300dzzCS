@@ -4,12 +4,18 @@ comments: true
 -----
 
 # **<center>低分杂蛆榜</center>**
-## ID:1614737403 <span style="color:#ff4444">你还会喜欢我吗</span>
+## ID:1614737403 <span style="color:#ff4444">你还喜欢我吗</span>
 >![](pic/010.png)<br>tag：小提米 低分蛆 <br>没得说，要素齐全，标准的野狗  
 还想上桌吃饭，哪里来的蛆也配？  
 说你小提米又不乐意了？你给提米神提鞋都不配  
 已永久拿下低分杂蛆cs第一位
 <hr style="border: 1px solid #9b44ff;">  
+
+## ID:4029941157 <span style="color:#ff4444">熊吃酸菜鱼</span> 2689000220 <span style="color:#ff4444">饿龙咆哮</span> 
+>![](pic/013.png)<br>两至尊cs，谁离开谁都会被弄似掉各种意义上  
+晓是心甘情愿不要50分也要陪它的K在水晶遛弯，K是不负所托全心全力不放一个兵出去  
+![](pic/013_1.gif)
+<hr style="border: 1px solid #9b44ff;">
 
 ## ID:1078169214 <span style="color:#ff4444">诗倦</span>
 >![](pic/012.png)<br>战法半藏，除了断线就是推人进泉水  
