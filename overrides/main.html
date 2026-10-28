@@ -2,7 +2,7 @@
 
 {% block styles %}
   {{ super() }}
-  <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
+  <link rel="stylesheet" href="{{ base_url }}/assets/waline/waline.css" />
   <style>
     /* ===== 评论区统一样式 ===== */
     .wl-embed {
@@ -77,7 +77,7 @@
       }
 
       var s = document.createElement('script');
-      s.src = 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+      s.src = '{{ base_url }}/assets/waline/waline.js';
       s.onload = loadWaline;
       s.onerror = function () {
         document.querySelectorAll('.wl-embed').forEach(function (el) {

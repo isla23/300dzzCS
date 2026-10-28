@@ -9,6 +9,10 @@ edit_uri: https://github.com/isla23/300dzzCS/edit/main/
 # 自定义CSS
 extra_css:
   - stylesheets/extra.css
+  - assets/waline/waline.css
+
+extra_javascript:
+  - assets/waline/waline.js
 
 theme:
   name: material

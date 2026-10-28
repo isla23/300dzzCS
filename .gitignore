@@ -1,0 +1,6 @@
+# MkDocs 构建产物，不入库
+site/
+
+# Python
+__pycache__/
+*.pyc
