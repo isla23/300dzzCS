@@ -58,6 +58,47 @@
     .wl-embed .wl-reply { padding-left: .55rem !important; margin-top: .15rem !important; }
     .wl-embed .wl-input-wrapper { padding: .15rem !important; }
     .wl-embed .wl-input { padding: .25rem .5rem !important; }
+
+    /* 隐藏每条评论的省份/浏览器/设备信息（保留时间 .wl-time） */
+    .wl-embed .wl-addr,
+    .wl-embed .wl-browser,
+    .wl-embed .wl-os { display: none !important; }
+
+    /* ===== 首次昵称弹窗 ===== */
+    #wl-nick-modal-mask {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.45);
+    }
+    #wl-nick-modal-mask.wl-hidden { display: none !important; }
+    #wl-nick-modal {
+      width: min(92vw, 360px);
+      padding: 1.2rem 1.3rem 1.4rem;
+      background: var(--md-default-bg-color, #fff);
+      color: var(--md-default-fg-color, #222);
+      border-radius: 14px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.25);
+      font-family: var(--md-text-font, sans-serif);
+    }
+    #wl-nick-modal h3 { margin: 0 0 .3rem; font-size: 1.05rem; }
+    #wl-nick-modal p { margin: 0 0 .8rem; font-size: .82rem; opacity: .7; line-height: 1.4; }
+    #wl-nick-modal input {
+      width: 100%; box-sizing: border-box;
+      padding: .5rem .7rem; font-size: .95rem;
+      border: 1px solid var(--md-default-fg-color--lightest, #ccc);
+      border-radius: 8px; outline: none;
+    }
+    #wl-nick-modal input:focus { border-color: var(--md-primary-fg-color, #ff5722); }
+    #wl-nick-modal .wl-nick-actions { margin-top: .9rem; text-align: right; }
+    #wl-nick-modal button {
+      padding: .45rem 1.1rem; font-size: .9rem; cursor: pointer;
+      color: #fff; background: var(--md-primary-fg-color, #ff5722);
+      border: none; border-radius: 8px;
+    }
+    #wl-nick-modal .wl-nick-skip {
+      margin-right: .6rem; color: var(--md-default-fg-color--light, #999);
+      background: transparent; font-size: .82rem;
+    }
   </style>
 {% endblock %}
 
@@ -68,6 +109,19 @@
   {% if page.meta.comments %}
   <div class="wl-embed" data-comment="page-end" data-title="📝 文章评论"></div>
   {% endif %}
+
+  {# 首次进入昵称弹窗：存在 localStorage 后不再弹，昵称会被 Waline 读取为默认昵称 #}
+  <div id="wl-nick-modal-mask" class="wl-hidden">
+    <div id="wl-nick-modal">
+      <h3>取个昵称吧～</h3>
+      <p>第一次逛文档，留个昵称方便在评论里认出你。之后评论会自动带上，随时可在浏览器里清掉记录重填。</p>
+      <input id="wl-nick-input" type="text" maxlength="20" placeholder="例如：路过的勇者" />
+      <div class="wl-nick-actions">
+        <button type="button" class="wl-nick-skip" id="wl-nick-skip">先不填</button>
+        <button type="button" id="wl-nick-ok">确定</button>
+      </div>
+    </div>
+  </div>
 
   {# Waline 评论脚本 — 用动态 import() 加载 ESM 构建，拿到 init 导出直接初始化 #}
   <script type="module">
@@ -80,6 +134,52 @@
         });
         console.warn('[Waline] 未配置 serverURL');
         return;
+      }
+
+      /* ===== 首次昵称：写入 Waline 读取的 WALINE_USER_META.nick ===== */
+      var NICK_KEY = 'WALINE_GUEST_NICK_SET';
+      var META_KEY = 'WALINE_USER_META';
+      function readMeta() {
+        try { return JSON.parse(localStorage.getItem(META_KEY) || '{}') || {}; }
+        catch (e) { return {}; }
+      }
+      function writeNick(nick) {
+        var m = readMeta();
+        m.nick = nick;
+        try { localStorage.setItem(META_KEY, JSON.stringify(m)); } catch (e) {}
+        try { localStorage.setItem(NICK_KEY, '1'); } catch (e) {}
+      }
+      var mask = document.getElementById('wl-nick-modal-mask');
+      var input = document.getElementById('wl-nick-input');
+      function openNickModal() {
+        if (!mask) return;
+        mask.classList.remove('wl-hidden');
+        setTimeout(function () { if (input) input.focus(); }, 50);
+      }
+      function closeNickModal() {
+        if (mask) mask.classList.add('wl-hidden');
+      }
+      function submitNick() {
+        var v = (input && input.value || '').trim();
+        if (!v) { if (input) input.focus(); return; }
+        writeNick(v);
+        closeNickModal();
+      }
+      if (mask) {
+        var okBtn = document.getElementById('wl-nick-ok');
+        var skipBtn = document.getElementById('wl-nick-skip');
+        if (okBtn) okBtn.addEventListener('click', submitNick);
+        if (skipBtn) skipBtn.addEventListener('click', function () {
+          try { localStorage.setItem(NICK_KEY, '1'); } catch (e) {}
+          closeNickModal();
+        });
+        if (input) input.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') submitNick();
+        });
+        // 首次访问（未设置过昵称）且本页有评论框才弹
+        var already = false;
+        try { already = !!localStorage.getItem(NICK_KEY); } catch (e) {}
+        if (!already && document.querySelectorAll('.wl-embed').length > 0) openNickModal();
       }
 
       function initAll(mod) {
