@@ -6,30 +6,31 @@
   <style>
     /* ===== 评论区统一样式 ===== */
     .wl-embed {
-      margin: 1.5rem 0;
-      padding: 1rem 1.25rem;
+      margin: .8rem 0;
+      padding: .6rem .9rem;
       border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.12));
       border-radius: 10px;
       background: var(--md-default-bg-color);
       box-shadow: 0 1px 3px rgba(0,0,0,.06);
     }
     .wl-title {
-      margin-bottom: .75rem;
+      margin-bottom: .4rem;
       font-weight: 600;
       color: var(--md-primary-fg-color);
+      font-size: .95rem;
     }
     .wl-fallback {
-      padding: .75rem 1rem;
+      padding: .5rem .75rem;
       color: var(--md-default-fg-color--light);
-      font-size: .9rem;
+      font-size: .85rem;
     }
     /* 折叠按钮 */
     .wl-collapse-btn {
       display: inline-block;
-      margin: .25rem 0 .5rem;
-      padding: .25rem .7rem;
-      font-size: .8rem;
-      line-height: 1.4;
+      margin: .1rem 0 .35rem;
+      padding: .18rem .6rem;
+      font-size: .76rem;
+      line-height: 1.3;
       color: var(--md-primary-fg-color, #ff5722);
       background: transparent;
       border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.2));
@@ -38,13 +39,24 @@
       user-select: none;
     }
     .wl-collapse-btn:hover { opacity: .7; }
+    /* 默认折叠留言列表：状态挂在父级 class，Waline 重渲染也不丢，每个框独立 */
+    .wl-embed.wl-collapsed .wl-comments { display: none !important; }
     /* 评论输入框高度降低一半（默认约 88px -> 44px） */
-    .wl-embed .wl-input {
-      min-height: 44px !important;
-    }
+    .wl-embed .wl-input,
     .wl-embed .wl-editor {
       min-height: 44px !important;
     }
+    /* 压缩 Waline 默认留白 */
+    .wl-embed .wl-panel { padding: 0 !important; }
+    .wl-embed .wl-header { margin-bottom: .35rem !important; }
+    .wl-embed .wl-header .wl-count { font-size: .8rem; }
+    .wl-embed .wl-comments { margin-top: .25rem !important; }
+    .wl-embed .wl-card { padding: .35rem 0 !important; }
+    .wl-embed .wl-card .wl-content { margin-top: .15rem !important; }
+    .wl-embed .wl-comment { padding: .25rem 0 !important; }
+    .wl-embed .wl-reply { padding-left: .55rem !important; margin-top: .15rem !important; }
+    .wl-embed .wl-input-wrapper { padding: .15rem !important; }
+    .wl-embed .wl-input { padding: .25rem .5rem !important; }
   </style>
 {% endblock %}
 
@@ -102,17 +114,22 @@
           WalineInit(opt);
           console.log('[Waline] 已在', cid, '初始化评论框');
 
-          // 折叠按钮：收起/展开留言列表（.wl-comments）
+          // 折叠按钮：状态挂到外层 .wl-embed.wl-collapsed，重渲染不丢、各框独立
           var btn = document.createElement('button');
           btn.className = 'wl-collapse-btn';
           btn.type = 'button';
-          btn.textContent = '收起评论 ▲';
+          btn.textContent = '展开评论 ▼';
+          el.classList.add('wl-collapsed');   // 初始折叠
           btn.addEventListener('click', function () {
-            var comments = el.querySelector('.wl-comments');
-            if (!comments) return;
-            var hidden = comments.style.display === 'none';
-            comments.style.display = hidden ? '' : 'none';
-            btn.textContent = hidden ? '收起评论 ▲' : '展开评论 ▼';
+            var collapsed = el.classList.toggle('wl-collapsed');
+            btn.textContent = collapsed ? '展开评论 ▼' : '收起评论 ▲';
+            if (!collapsed) {
+              // 展开时若留言还没加载（被懒加载或异步），强制刷新一次布局
+              var comments = el.querySelector('.wl-comments');
+              if (comments && !comments.dataset.loaded) {
+                comments.dataset.loaded = '1';
+              }
+            }
           });
           if (titleEl) titleEl.parentNode.insertBefore(btn, titleEl.nextSibling);
           else el.parentNode.insertBefore(btn, el);
