@@ -17,7 +17,9 @@
       font-weight: 600;
       color: var(--md-primary-fg-color);
     }
-    /* 隐藏邮箱 / 网址输入框，以及设备信息 */
+    /* 隐藏昵称 / 邮箱 / 网址 一整行，评论只需填正文，以及隐藏设备信息 */
+    .tk-meta-item:has(input[name="nick"]),
+    .tk-col-s-6:has(input[name="nick"]),
     .tk-meta-item:has(input[name="mail"]),
     .tk-col-s-6:has(input[name="mail"]),
     .tk-meta-item:has(input[name="url"]),
