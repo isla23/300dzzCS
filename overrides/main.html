@@ -99,6 +99,27 @@
       margin-right: .6rem; color: var(--md-default-fg-color--light, #999);
       background: transparent; font-size: .82rem;
     }
+
+    /* ===== 评论框顶部身份条：头像 + 昵称 ===== */
+    .wl-nick-bar {
+      display: flex; align-items: center; gap: .5rem;
+      margin: .1rem 0 .5rem; font-size: .85rem;
+      color: var(--md-default-fg-color, #222);
+    }
+    .wl-nick-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 600; font-size: .85rem; flex: 0 0 auto;
+      box-shadow: 0 1px 2px rgba(0,0,0,.15);
+    }
+    .wl-nick-name { font-weight: 600; }
+    .wl-nick-hint { opacity: .65; font-size: .78rem; }
+    .wl-nick-edit {
+      margin-left: auto; font-size: .78rem; cursor: pointer;
+      color: var(--md-primary-fg-color, #ff5722);
+      background: transparent; border: none; padding: .1rem .3rem;
+    }
+    .wl-nick-edit:hover { text-decoration: underline; }
   </style>
 {% endblock %}
 
@@ -182,6 +203,72 @@
         if (!already && document.querySelectorAll('.wl-embed').length > 0) openNickModal();
       }
 
+      /* ===== 评论框顶部身份条：头像(首字圆牌) + 昵称 ===== */
+      function getNick() {
+        var m = readMeta();
+        return (m.nick || '').trim();
+      }
+      function colorFrom(str) {
+        str = str || '匿名';
+        var h = 0;
+        for (var i = 0; i < str.length; i++) { h = (h * 31 + str.charCodeAt(i)) % 360; }
+        return 'hsl(' + h + ',52%,55%)';
+      }
+      function firstChar(str) {
+        str = (str || '').trim();
+        return str ? str.charAt(0).toUpperCase() : '?';
+      }
+      function updateAllNickBars() {
+        var nick = getNick();
+        document.querySelectorAll('.wl-nick-bar').forEach(function (bar) {
+          var av = bar.querySelector('.wl-nick-avatar');
+          var nm = bar.querySelector('.wl-nick-name');
+          if (av) { av.textContent = firstChar(nick); av.style.background = colorFrom(nick); }
+          if (nm) nm.textContent = nick || '匿名访客';
+        });
+      }
+      function ensureNickBar(el) {
+        var prev = el.previousElementSibling;
+        if (prev && prev.classList && prev.classList.contains('wl-nick-bar')) { fillBar(prev); return prev; }
+        var bar = document.createElement('div');
+        bar.className = 'wl-nick-bar';
+        var av = document.createElement('div'); av.className = 'wl-nick-avatar';
+        var nm = document.createElement('span'); nm.className = 'wl-nick-name';
+        var hint = document.createElement('span'); hint.className = 'wl-nick-hint'; hint.textContent = '（你的昵称）';
+        var edit = document.createElement('button');
+        edit.type = 'button'; edit.className = 'wl-nick-edit'; edit.textContent = '修改';
+        edit.addEventListener('click', function () {
+          var v = window.prompt('修改你的昵称：', getNick() || '');
+          if (v === null) return;
+          v = v.trim();
+          if (!v) return;
+          writeNick(v);
+          updateAllNickBars();
+        });
+        bar.appendChild(av); bar.appendChild(nm); bar.appendChild(hint); bar.appendChild(edit);
+        el.parentNode.insertBefore(bar, el);
+        fillBar(bar);
+        return bar;
+      }
+      function fillBar(bar) {
+        var nick = getNick();
+        var av = bar.querySelector('.wl-nick-avatar');
+        var nm = bar.querySelector('.wl-nick-name');
+        if (av) { av.textContent = firstChar(nick); av.style.background = colorFrom(nick); }
+        if (nm) nm.textContent = nick || '匿名访客';
+      }
+      // 多标签页同步
+      window.addEventListener('storage', function (e) {
+        if (e && e.key === META_KEY) updateAllNickBars();
+      });
+      // 把当前昵称回填到所有 Waline 昵称输入框（INPUT，排除 textarea/按钮）
+      function applyNickToWaline() {
+        var nick = getNick();
+        document.querySelectorAll('.wl-embed .wl-panel input').forEach(function (inp) {
+          if (inp && inp.tagName === 'INPUT' && inp.type !== 'hidden') inp.value = nick;
+        });
+      }
+
       function initAll(mod) {
         console.log('[Waline] waline.js 加载成功, init 可用 =', !!(mod.init || (mod.default && mod.default.init)));
         // ESM 构建导出 init；兼容 default.init 形态
@@ -214,6 +301,27 @@
           if (cid !== 'page-end') opt.path = location.pathname + '#' + cid;
           WalineInit(opt);
           console.log('[Waline] 已在', cid, '初始化评论框');
+
+          // 顶部身份条（头像+昵称），与 Waline 昵称输入框双向同步
+          var bar = ensureNickBar(el);
+          var initialNick = getNick();
+          // 等 Waline 渲染出输入框后回填昵称，并监听其变化
+          var nickSync = new MutationObserver(function () {
+            var inp = el.querySelector('.wl-panel input');
+            if (!inp) return;
+            nickSync.disconnect();
+            // 回填：让 Waline 昵称框显示刚存的昵称
+            if (!inp.value) inp.value = initialNick;
+            // Waline 输入框变化时 -> 更新身份条
+            inp.addEventListener('input', function () {
+              var v = (inp.value || '').trim();
+              if (v === getNick()) return;
+              writeNick(v || '匿名访客');
+              updateAllNickBars();
+            });
+          });
+          nickSync.observe(el, { childList: true, subtree: true });
+          applyNickToWaline();
 
           // 折叠按钮：状态挂到外层 .wl-embed.wl-collapsed，重渲染不丢、各框独立
           // 规则：评论数 > 2 才默认折叠；<=2 默认展开
