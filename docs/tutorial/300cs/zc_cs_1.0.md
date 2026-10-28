@@ -11,7 +11,7 @@ comments: true
 > **注意：** 目前还在测试阶段，有需要的请在下方评论区留下id
 <hr style="border: 1px solid #9b44ff;">
 
-<div class="twikoo-embed" data-comment="intro" data-title="💬 开篇评论：你是来留ID还是来吃瓜的？"></div>
+<div class="wl-embed" data-comment="intro" data-title="💬 开篇评论：你是来留ID还是来吃瓜的？"></div>
 
 ## ID:808257561 <span style="color:#ff4444">「静谧」洛亚姆</span>
 >

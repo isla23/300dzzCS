@@ -45,7 +45,10 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/MaaGF1/MaaGF1
       name: GitHub 仓库
-  disqus: 'twikoo'
+  waline:
+    serverURL: "https://300cs-waline-syffkipr6-300cs-projects.vercel.app"
+    pageview: true
+    reaction: true
 # 目录结构
 nav:
   - ZC综合cs: tutorial/300cs/zc_cs_1.0.md

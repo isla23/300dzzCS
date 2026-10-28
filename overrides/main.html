@@ -2,9 +2,10 @@
 
 {% block styles %}
   {{ super() }}
+  <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
   <style>
     /* ===== 评论区统一样式 ===== */
-    .twikoo-embed {
+    .wl-embed {
       margin: 1.5rem 0;
       padding: 1rem 1.25rem;
       border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.12));
@@ -12,23 +13,12 @@
       background: var(--md-default-bg-color);
       box-shadow: 0 1px 3px rgba(0,0,0,.06);
     }
-    .tk-title {
+    .wl-title {
       margin-bottom: .75rem;
       font-weight: 600;
       color: var(--md-primary-fg-color);
     }
-    /* 隐藏昵称 / 邮箱 / 网址 一整行，评论只需填正文；同时隐藏设备信息 */
-    .tk-meta-item:has(input[name="nick"]),
-    .tk-col-s-6:has(input[name="nick"]),
-    .tk-meta-item:has(input[name="mail"]),
-    .tk-col-s-6:has(input[name="mail"]),
-    .tk-meta-item:has(input[name="url"]),
-    .tk-col-s-6:has(input[name="url"]),
-    .tk-comment-card-footer .tk-comment-device,
-    .tk-comment-footer .tk-device {
-      display: none !important;
-    }
-    .tk-fallback {
+    .wl-fallback {
       padding: .75rem 1rem;
       color: var(--md-default-fg-color--light);
       font-size: .9rem;
@@ -41,77 +31,60 @@
 
   {# 文末全局评论区：仅当文章 frontmatter 写了 comments: true 时出现 #}
   {% if page.meta.comments %}
-  <div class="twikoo-embed" data-comment="page-end" data-title="📝 文章评论"></div>
+  <div class="wl-embed" data-comment="page-end" data-title="📝 文章评论"></div>
   {% endif %}
 
+  {# Waline 评论脚本 — 直接放在 content 底部保证加载 #}
   <script>
     (function () {
-      var CDN_LIST = [
-        'https://cdn.staticfile.org/twikoo/1.6.41/twikoo.all.min.js',
-        'https://cdn.jsdelivr.net/npm/twikoo@1.6.41/dist/twikoo.all.min.js',
-        'https://unpkg.com/twikoo@1.6.41/dist/twikoo.all.min.js'
-      ];
-      var ENV_ID = 'https://300csvercel.vercel.app';
-      var base = window.location.pathname;
-
-      function loadScript(idx) {
-        if (typeof twikoo !== 'undefined') { initAll(); return; }
-        if (idx >= CDN_LIST.length) {
-          document.querySelectorAll('.twikoo-embed').forEach(function (el) {
-            el.innerHTML = '<div class="tk-fallback">评论组件加载失败，请检查网络后刷新～</div>';
-          });
-          return;
-        }
-        var s = document.createElement('script');
-        s.src = CDN_LIST[idx];
-        s.onload = function () { initAll(); };
-        s.onerror = function () { loadScript(idx + 1); };
-        document.head.appendChild(s);
+      var cfg = {{ config.extra.waline | tojson }};
+      if (!cfg || !cfg.serverURL || cfg.serverURL.indexOf('REPLACE') === 0) {
+        document.querySelectorAll('.wl-embed').forEach(function (el) {
+          el.innerHTML = '<div class="wl-fallback">评论系统未配置：请在 mkdocs.yml 的 extra.waline.serverURL 填入你的 Waline 后端地址。</div>';
+        });
+        return;
       }
 
-      function initAll() {
-        document.querySelectorAll('.twikoo-embed').forEach(function (el) {
-          if (el.dataset.twikooReady) return;
-          el.dataset.twikooReady = '1';
+      function loadWaline() {
+        if (typeof Waline === 'undefined') { setTimeout(loadWaline, 150); return; }
+        document.querySelectorAll('.wl-embed').forEach(function (el) {
+          if (el.dataset.wlReady) return;
+          el.dataset.wlReady = '1';
 
-          // 标题作为兄弟节点插入，避免被 Twikoo 清空容器时误删
           var title = el.getAttribute('data-title');
-          if (title && (!el.previousElementSibling || !el.previousElementSibling.classList.contains('tk-title'))) {
+          if (title && (!el.previousElementSibling || !el.previousElementSibling.classList.contains('wl-title'))) {
             var h = document.createElement('div');
-            h.className = 'tk-title';
+            h.className = 'wl-title';
             h.textContent = title;
             el.parentNode.insertBefore(h, el);
           }
 
           var cid = el.getAttribute('data-comment') || 'page-end';
-          var opt = { envId: ENV_ID, el: el, lang: 'zh-CN' };
-          // 文末主线程沿用旧路径，内联线程追加锚点以区分
-          if (cid !== 'page-end') opt.path = base + '#' + cid;
-          twikoo.init(opt);
-
-          // 昵称框被隐藏后仍需非空才能提交，自动填充匿名昵称
-          autoFillNick(el);
+          var opt = {
+            serverURL: cfg.serverURL,
+            el: el,
+            lang: 'zh-CN',
+            login: 'disable',        // 关闭登录按钮，允许匿名
+            meta: ['nick'],          // 只保留昵称一栏，邮箱/网址直接砍掉
+            pageview: !!cfg.pageview,
+            commentSorting: 'latest',
+            reaction: !!cfg.reaction
+          };
+          // 文末主线程沿用旧路径，内联线程追加锚点以隔离
+          if (cid !== 'page-end') opt.path = location.pathname + '#' + cid;
+          Waline.init(opt);
         });
       }
 
-      function autoFillNick(el) {
-        var tries = 0;
-        var timer = setInterval(function () {
-          var input = el.querySelector('input[name="nick"]') || el.querySelector('.tk-input.nick');
-          if (input) {
-            if (!input.value) input.value = '匿名访客' + Math.floor(Math.random() * 9000 + 1000);
-            clearInterval(timer);
-            return;
-          }
-          if (++tries > 40) clearInterval(timer); // 约 4s 还没渲染出来就放弃
-        }, 100);
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { loadScript(0); });
-      } else {
-        loadScript(0);
-      }
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+      s.onload = loadWaline;
+      s.onerror = function () {
+        document.querySelectorAll('.wl-embed').forEach(function (el) {
+          el.innerHTML = '<div class="wl-fallback">评论组件加载失败，请检查网络后刷新～</div>';
+        });
+      };
+      document.head.appendChild(s);
     })();
   </script>
 {% endblock %}
