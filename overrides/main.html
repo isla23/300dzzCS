@@ -35,17 +35,20 @@
   {% endif %}
 
   {# Waline 评论脚本 — 用动态 import() 加载 ESM 构建，拿到 init 导出直接初始化 #}
-  <script>
+  <script type="module">
     (function () {
+      console.log('[Waline] module script 已执行');
       var cfg = {{ config.extra.waline | tojson }};
       if (!cfg || !cfg.serverURL || cfg.serverURL.indexOf('REPLACE') === 0) {
         document.querySelectorAll('.wl-embed').forEach(function (el) {
           el.innerHTML = '<div class="wl-fallback">评论系统未配置：请在 mkdocs.yml 的 extra.waline.serverURL 填入你的 Waline 后端地址。</div>';
         });
+        console.warn('[Waline] 未配置 serverURL');
         return;
       }
 
       function initAll(mod) {
+        console.log('[Waline] waline.js 加载成功, init 可用 =', !!(mod.init || (mod.default && mod.default.init)));
         // ESM 构建导出 init；兼容 default.init 形态
         var WalineInit = mod.init || (mod.default && mod.default.init) || mod;
         document.querySelectorAll('.wl-embed').forEach(function (el) {
@@ -74,23 +77,18 @@
           // 文末主线程沿用旧路径，内联线程追加锚点以隔离
           if (cid !== 'page-end') opt.path = location.pathname + '#' + cid;
           WalineInit(opt);
+          console.log('[Waline] 已在', cid, '初始化评论框');
         });
       }
 
-      if (typeof import === 'function') {
-        import('{{ base_url }}/assets/waline/waline.js')
-          .then(initAll)
-          .catch(function (e) {
-            console.error('[Waline] 加载失败', e);
-            document.querySelectorAll('.wl-embed').forEach(function (el) {
-              if (!el.dataset.wlReady) el.innerHTML = '<div class="wl-fallback">评论组件加载失败，请检查网络后刷新～</div>';
-            });
+      import('{{ base_url }}/assets/waline/waline.js')
+        .then(initAll)
+        .catch(function (e) {
+          console.error('[Waline] waline.js 加载失败', e);
+          document.querySelectorAll('.wl-embed').forEach(function (el) {
+            if (!el.dataset.wlReady) el.innerHTML = '<div class="wl-fallback">评论组件加载失败，请检查网络后刷新～</div>';
           });
-      } else {
-        document.querySelectorAll('.wl-embed').forEach(function (el) {
-          el.innerHTML = '<div class="wl-fallback">当前浏览器不支持动态加载，请升级浏览器～</div>';
         });
-      }
     })();
   </script>
 {% endblock %}
