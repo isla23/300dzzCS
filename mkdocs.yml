@@ -49,7 +49,7 @@ extra:
   waline:
     serverURL: "https://300cs-waline-syffkipr6-300cs-projects.vercel.app"
     pageview: true
-    reaction: true
+    reaction: false
 # 目录结构
 nav:
   - ZC综合cs: tutorial/300cs/zc_cs_1.0.md
