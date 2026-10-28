@@ -276,7 +276,7 @@
         document.querySelectorAll('.wl-embed').forEach(function (el) {
           if (el.dataset.wlReady) return;
           el.dataset.wlReady = '1';
-
+          try {
           var title = el.getAttribute('data-title');
           var titleEl = null;
           if (title && (!el.previousElementSibling || !el.previousElementSibling.classList.contains('wl-title'))) {
@@ -365,15 +365,22 @@
           setTimeout(function () {
             if (!initialDone) { setInitial(); mo.disconnect(); }
           }, 3000);
+          } catch (err) {
+            console.error('[Waline] 单框初始化失败：', err);
+            el.innerHTML = '<div class="wl-fallback">该评论框初始化失败：' + ((err && err.message) || err) + '</div>';
+          }
         });
       }
 
       import('{{ 'assets/waline/waline.js' | url }}')
         .then(initAll)
         .catch(function (e) {
-          console.error('[Waline] waline.js 加载失败', e);
+          console.error('[Waline] waline.js 加载/初始化失败：', e);
+          var msg = (e && (e.message || e.toString())) || '未知错误';
           document.querySelectorAll('.wl-embed').forEach(function (el) {
-            if (!el.dataset.wlReady) el.innerHTML = '<div class="wl-fallback">评论组件加载失败，请检查网络后刷新～</div>';
+            if (!el.dataset.wlReady) {
+              el.innerHTML = '<div class="wl-fallback">评论组件加载失败：' + msg + '（F12 看 Console 详情）</div>';
+            }
           });
         });
     })();
