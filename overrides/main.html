@@ -23,6 +23,28 @@
       color: var(--md-default-fg-color--light);
       font-size: .9rem;
     }
+    /* 折叠按钮 */
+    .wl-collapse-btn {
+      display: inline-block;
+      margin: .25rem 0 .5rem;
+      padding: .25rem .7rem;
+      font-size: .8rem;
+      line-height: 1.4;
+      color: var(--md-primary-fg-color, #ff5722);
+      background: transparent;
+      border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.2));
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .wl-collapse-btn:hover { opacity: .7; }
+    /* 评论输入框高度降低一半（默认约 88px -> 44px） */
+    .wl-embed .wl-input {
+      min-height: 44px !important;
+    }
+    .wl-embed .wl-editor {
+      min-height: 44px !important;
+    }
   </style>
 {% endblock %}
 
@@ -56,11 +78,12 @@
           el.dataset.wlReady = '1';
 
           var title = el.getAttribute('data-title');
+          var titleEl = null;
           if (title && (!el.previousElementSibling || !el.previousElementSibling.classList.contains('wl-title'))) {
-            var h = document.createElement('div');
-            h.className = 'wl-title';
-            h.textContent = title;
-            el.parentNode.insertBefore(h, el);
+            titleEl = document.createElement('div');
+            titleEl.className = 'wl-title';
+            titleEl.textContent = title;
+            el.parentNode.insertBefore(titleEl, el);
           }
 
           var cid = el.getAttribute('data-comment') || 'page-end';
@@ -78,6 +101,21 @@
           if (cid !== 'page-end') opt.path = location.pathname + '#' + cid;
           WalineInit(opt);
           console.log('[Waline] 已在', cid, '初始化评论框');
+
+          // 折叠按钮：收起/展开留言列表（.wl-comments）
+          var btn = document.createElement('button');
+          btn.className = 'wl-collapse-btn';
+          btn.type = 'button';
+          btn.textContent = '收起评论 ▲';
+          btn.addEventListener('click', function () {
+            var comments = el.querySelector('.wl-comments');
+            if (!comments) return;
+            var hidden = comments.style.display === 'none';
+            comments.style.display = hidden ? '' : 'none';
+            btn.textContent = hidden ? '收起评论 ▲' : '展开评论 ▼';
+          });
+          if (titleEl) titleEl.parentNode.insertBefore(btn, titleEl.nextSibling);
+          else el.parentNode.insertBefore(btn, el);
         });
       }
 
