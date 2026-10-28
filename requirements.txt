@@ -1,6 +1,1 @@
-# 锁定 MkDocs 大版本，避免未来 2.0 的不兼容更新
-mkdocs>=1.6,<2
-# 锁定主题大版本，并升级到能自动“闭嘴”的版本
-mkdocs-material>=9.7.6,<10
-# 这是我们要手动添加的评论插件
-mkdocs-shortcode
+mkdocs-material==9.8.0

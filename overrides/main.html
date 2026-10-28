@@ -2,7 +2,7 @@
 
 {% block styles %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ base_url }}/assets/waline/waline.css" />
+  <link rel="stylesheet" href="{{ 'assets/waline/waline.css' | url }}" />
   <style>
     /* ===== 评论区统一样式 ===== */
     .wl-embed {
@@ -119,7 +119,7 @@
         });
       }
 
-      import('{{ base_url }}/assets/waline/waline.js')
+      import('{{ 'assets/waline/waline.js' | url }}')
         .then(initAll)
         .catch(function (e) {
           console.error('[Waline] waline.js 加载失败', e);
