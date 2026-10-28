@@ -115,24 +115,47 @@
           console.log('[Waline] 已在', cid, '初始化评论框');
 
           // 折叠按钮：状态挂到外层 .wl-embed.wl-collapsed，重渲染不丢、各框独立
+          // 规则：评论数 > 2 才默认折叠；<=2 默认展开
           var btn = document.createElement('button');
           btn.className = 'wl-collapse-btn';
           btn.type = 'button';
-          btn.textContent = '展开评论 ▼';
-          el.classList.add('wl-collapsed');   // 初始折叠
-          btn.addEventListener('click', function () {
-            var collapsed = el.classList.toggle('wl-collapsed');
+          var COLLAPSE_THRESHOLD = 2;
+
+          function applyCollapse(collapsed) {
+            el.classList.toggle('wl-collapsed', collapsed);
             btn.textContent = collapsed ? '展开评论 ▼' : '收起评论 ▲';
-            if (!collapsed) {
-              // 展开时若留言还没加载（被懒加载或异步），强制刷新一次布局
-              var comments = el.querySelector('.wl-comments');
-              if (comments && !comments.dataset.loaded) {
-                comments.dataset.loaded = '1';
-              }
-            }
+          }
+
+          function countComments() {
+            // Waline 的 .wl-card 是每条评论；数一下实际的
+            var cards = el.querySelectorAll('.wl-comments .wl-card');
+            return cards ? cards.length : 0;
+          }
+
+          btn.addEventListener('click', function () {
+            applyCollapse(!el.classList.contains('wl-collapsed'));
           });
+
           if (titleEl) titleEl.parentNode.insertBefore(btn, titleEl.nextSibling);
           else el.parentNode.insertBefore(btn, el);
+
+          // 初始：等 Waline 渲染出评论列表后按数量决定折叠
+          // 用 MutationObserver 兜底，避免异步加载导致 count 为 0 误判
+          var initialDone = false;
+          function setInitial() {
+            if (initialDone) return;
+            var n = countComments();
+            if (n === 0) return; // 还没加载出来，继续等
+            initialDone = true;
+            applyCollapse(n > COLLAPSE_THRESHOLD);
+          }
+          var mo = new MutationObserver(setInitial);
+          mo.observe(el, { childList: true, subtree: true });
+          setInitial();
+          // 保险：3 秒后若仍未判定（极端慢加载），按当前数量定
+          setTimeout(function () {
+            if (!initialDone) { setInitial(); mo.disconnect(); }
+          }, 3000);
         });
       }
 
