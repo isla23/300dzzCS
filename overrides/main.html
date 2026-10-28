@@ -1,33 +1,83 @@
 {% extends "base.html" %}
 
+{% block styles %}
+  {{ super() }}
+  <style>
+    /* ===== 评论区统一样式 ===== */
+    .twikoo-embed {
+      margin: 1.5rem 0;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.12));
+      border-radius: 10px;
+      background: var(--md-default-bg-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .tk-title {
+      margin-bottom: .75rem;
+      font-weight: 600;
+      color: var(--md-primary-fg-color);
+    }
+    /* 隐藏邮箱 / 网址输入框，以及设备信息 */
+    .tk-meta-item:has(input[name="mail"]),
+    .tk-col-s-6:has(input[name="mail"]),
+    .tk-meta-item:has(input[name="url"]),
+    .tk-col-s-6:has(input[name="url"]),
+    .tk-comment-card-footer .tk-comment-device,
+    .tk-comment-footer .tk-device {
+      display: none !important;
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
   {{ super() }}
+
+  {# 文末全局评论区：仅当文章 frontmatter 写了 comments: true 时出现 #}
   {% if page.meta.comments %}
-    <div id="twikoo" style="min-height: 500px;"></div>
-    <script src="https://cdn.staticfile.org/twikoo/1.6.41/twikoo.all.min.js"></script>
-    <script>
-      twikoo.init({
-        envId: 'https://300csvercel.vercel.app',
-        el: '#twikoo',
-        lang: 'zh-CN',
-      })
-    </script>
-    <style>
-      /* 隐藏邮箱输入框所在的整个表单项 */
-      .tk-meta-item:has(input[name="mail"]),
-      .tk-col-s-6:has(input[name="mail"]) {
-        display: none !important;
-      }
-      /* 隐藏网址输入框所在的整个表单项 */
-      .tk-meta-item:has(input[name="url"]),
-      .tk-col-s-6:has(input[name="url"]) {
-        display: none !important;
-      }
-      /* 隐藏设备信息 */
-      .tk-comment-card-footer .tk-comment-device,
-      .tk-comment-footer .tk-device {
-        display: none !important;
-      }
-    </style>
+  <div class="twikoo-embed" data-comment="page-end" data-title="📝 文章评论"></div>
   {% endif %}
+
+  <script src="https://cdn.staticfile.net/twikoo/1.6.41/twikoo.all.min.js"></script>
+  <script>
+    (function () {
+      function initTwikoo() {
+        if (typeof twikoo === 'undefined') {
+          setTimeout(initTwikoo, 200);
+          return;
+        }
+        var base = window.location.pathname;
+        document.querySelectorAll('.twikoo-embed').forEach(function (el) {
+          if (el.dataset.twikooReady) return;
+          el.dataset.twikooReady = '1';
+
+          // 标题作为兄弟节点插入，避免被 Twikoo 清空容器时误删
+          var title = el.getAttribute('data-title');
+          if (title && (!el.previousElementSibling || !el.previousElementSibling.classList.contains('tk-title'))) {
+            var h = document.createElement('div');
+            h.className = 'tk-title';
+            h.textContent = title;
+            el.parentNode.insertBefore(h, el);
+          }
+
+          var cid = el.getAttribute('data-comment') || 'page-end';
+          var opt = {
+            envId: 'https://300csvercel.vercel.app',
+            el: el,
+            lang: 'zh-CN'
+          };
+          // 文末主线程沿用旧路径，内联线程追加锚点以区分
+          if (cid !== 'page-end') {
+            opt.path = base + '#' + cid;
+          }
+          twikoo.init(opt);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTwikoo);
+      } else {
+        initTwikoo();
+      }
+    })();
+  </script>
 {% endblock %}
