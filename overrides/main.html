@@ -261,11 +261,11 @@
       window.addEventListener('storage', function (e) {
         if (e && e.key === META_KEY) updateAllNickBars();
       });
-      // 把当前昵称回填到所有 Waline 昵称输入框（INPUT，排除 textarea/按钮）
+      // 把当前昵称回填到所有 Waline 昵称输入框（只认 name="nick"，绝不碰 type="file" 图片框）
       function applyNickToWaline() {
         var nick = getNick();
-        document.querySelectorAll('.wl-embed .wl-panel input').forEach(function (inp) {
-          if (inp && inp.tagName === 'INPUT' && inp.type !== 'hidden') inp.value = nick;
+        document.querySelectorAll('.wl-embed .wl-panel input[name="nick"]').forEach(function (inp) {
+          if (inp && inp.type !== 'file' && inp.type !== 'hidden') inp.value = nick;
         });
       }
 
@@ -307,7 +307,7 @@
           var initialNick = getNick();
           // 等 Waline 渲染出输入框后回填昵称，并监听其变化
           var nickSync = new MutationObserver(function () {
-            var inp = el.querySelector('.wl-panel input');
+            var inp = el.querySelector('.wl-panel input[name="nick"]');
             if (!inp) return;
             nickSync.disconnect();
             // 回填：让 Waline 昵称框显示刚存的昵称
