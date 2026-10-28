@@ -40,7 +40,8 @@
     }
     .wl-collapse-btn:hover { opacity: .7; }
     /* 默认折叠留言列表：状态挂在父级 class，Waline 重渲染也不丢，每个框独立 */
-    .wl-embed.wl-collapsed .wl-comments { display: none !important; }
+    /* Waline v3 的评论列表容器是 .wl-cards（不是 v2 的 .wl-comments） */
+    .wl-embed.wl-collapsed .wl-cards { display: none !important; }
     /* 评论输入框高度降低一半（默认约 88px -> 44px） */
     .wl-embed .wl-input,
     .wl-embed .wl-editor {
@@ -127,8 +128,8 @@
           }
 
           function countComments() {
-            // Waline 的 .wl-card 是每条评论；数一下实际的
-            var cards = el.querySelectorAll('.wl-comments .wl-card');
+            // Waline v3 评论列表容器是 .wl-cards，每条评论是 .wl-card
+            var cards = el.querySelectorAll('.wl-cards .wl-card');
             return cards ? cards.length : 0;
           }
 
