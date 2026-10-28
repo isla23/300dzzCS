@@ -17,7 +17,7 @@
       font-weight: 600;
       color: var(--md-primary-fg-color);
     }
-    /* 隐藏昵称 / 邮箱 / 网址 一整行，评论只需填正文，以及隐藏设备信息 */
+    /* 隐藏昵称 / 邮箱 / 网址 一整行，评论只需填正文；同时隐藏设备信息 */
     .tk-meta-item:has(input[name="nick"]),
     .tk-col-s-6:has(input[name="nick"]),
     .tk-meta-item:has(input[name="mail"]),
@@ -27,6 +27,11 @@
     .tk-comment-card-footer .tk-comment-device,
     .tk-comment-footer .tk-device {
       display: none !important;
+    }
+    .tk-fallback {
+      padding: .75rem 1rem;
+      color: var(--md-default-fg-color--light);
+      font-size: .9rem;
     }
   </style>
 {% endblock %}
@@ -39,15 +44,32 @@
   <div class="twikoo-embed" data-comment="page-end" data-title="📝 文章评论"></div>
   {% endif %}
 
-  <script src="https://cdn.staticfile.net/twikoo/1.6.41/twikoo.all.min.js"></script>
   <script>
     (function () {
-      function initTwikoo() {
-        if (typeof twikoo === 'undefined') {
-          setTimeout(initTwikoo, 200);
+      var CDN_LIST = [
+        'https://cdn.staticfile.org/twikoo/1.6.41/twikoo.all.min.js',
+        'https://cdn.jsdelivr.net/npm/twikoo@1.6.41/dist/twikoo.all.min.js',
+        'https://unpkg.com/twikoo@1.6.41/dist/twikoo.all.min.js'
+      ];
+      var ENV_ID = 'https://300csvercel.vercel.app';
+      var base = window.location.pathname;
+
+      function loadScript(idx) {
+        if (typeof twikoo !== 'undefined') { initAll(); return; }
+        if (idx >= CDN_LIST.length) {
+          document.querySelectorAll('.twikoo-embed').forEach(function (el) {
+            el.innerHTML = '<div class="tk-fallback">评论组件加载失败，请检查网络后刷新～</div>';
+          });
           return;
         }
-        var base = window.location.pathname;
+        var s = document.createElement('script');
+        s.src = CDN_LIST[idx];
+        s.onload = function () { initAll(); };
+        s.onerror = function () { loadScript(idx + 1); };
+        document.head.appendChild(s);
+      }
+
+      function initAll() {
         document.querySelectorAll('.twikoo-embed').forEach(function (el) {
           if (el.dataset.twikooReady) return;
           el.dataset.twikooReady = '1';
@@ -62,23 +84,33 @@
           }
 
           var cid = el.getAttribute('data-comment') || 'page-end';
-          var opt = {
-            envId: 'https://300csvercel.vercel.app',
-            el: el,
-            lang: 'zh-CN'
-          };
+          var opt = { envId: ENV_ID, el: el, lang: 'zh-CN' };
           // 文末主线程沿用旧路径，内联线程追加锚点以区分
-          if (cid !== 'page-end') {
-            opt.path = base + '#' + cid;
-          }
+          if (cid !== 'page-end') opt.path = base + '#' + cid;
           twikoo.init(opt);
+
+          // 昵称框被隐藏后仍需非空才能提交，自动填充匿名昵称
+          autoFillNick(el);
         });
       }
 
+      function autoFillNick(el) {
+        var tries = 0;
+        var timer = setInterval(function () {
+          var input = el.querySelector('input[name="nick"]') || el.querySelector('.tk-input.nick');
+          if (input) {
+            if (!input.value) input.value = '匿名访客' + Math.floor(Math.random() * 9000 + 1000);
+            clearInterval(timer);
+            return;
+          }
+          if (++tries > 40) clearInterval(timer); // 约 4s 还没渲染出来就放弃
+        }, 100);
+      }
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTwikoo);
+        document.addEventListener('DOMContentLoaded', function () { loadScript(0); });
       } else {
-        initTwikoo();
+        loadScript(0);
       }
     })();
   </script>

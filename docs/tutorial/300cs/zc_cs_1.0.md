@@ -15,7 +15,7 @@ comments: true
 
 ## ID:808257561 <span style="color:#ff4444">「静谧」洛亚姆</span>
 >
->![图1](pic/001.png)<br>![图2](pic/001_1.png)<br>自爆king！自爆之下众生平等，听说不久就要重操旧业，但是目前环境这么shit，牢矣尚能炸否？<div class="twikoo-embed" data-comment="step-2" data-title="💬 第二步评论"></div>
+>![图1](pic/001.png)<br>![图2](pic/001_1.png)<br>自爆king！自爆之下众生平等，听说不久就要重操旧业，但是目前环境这么shit，牢矣尚能炸否？<div <div class="twikoo-embed" data-comment="step-2" data-title="💬 第二步评论"></div>
 <hr style="border: 1px solid #9b44ff;">  
 
 ## ID:272092886 <span style="color:#ff4444">星した旅人萌神</span>
