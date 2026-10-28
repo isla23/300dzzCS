@@ -11,9 +11,6 @@ extra_css:
   - stylesheets/extra.css
   - assets/waline/waline.css
 
-extra_javascript:
-  - assets/waline/waline.js
-
 theme:
   name: material
   custom_dir: overrides
